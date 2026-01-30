@@ -29,5 +29,5 @@ def register_device():
         "api_key": hashed_key,
     })
     
-    device["api_key"] = raw_api_key
+    device["api_key"] = f"{device['id']}.raw_api_key"
     return (device, 201)

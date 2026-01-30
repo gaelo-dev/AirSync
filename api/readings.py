@@ -15,11 +15,10 @@ def validate_payload(payload: dict, required_fields: list) -> Optional[dict]:
 @bp.before_request
 def validate_permissions():
     """Validacion de los permisos del dispositivo que intenta registrar datos"""
-    device_id = request.headers.get("X-DEVICE-ID")
-    ak = request.headers.get("X-API-KEY")
+    device_id, ak = request.headers.get("X-API-KEY").split(".", 1)
     
     if not device_id or not ak:
-        return {"error": "Credenciales Incompletas"}, 400
+        return {"error": "Credencial Invalida"}, 400
 
     g.device = db_client.access.fetch_device_by_id(id=device_id)
     if g.device is None or not check_password_hash(g.device["api_key"], ak):
