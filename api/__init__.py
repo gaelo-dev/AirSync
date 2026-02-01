@@ -30,8 +30,10 @@ def create_app() -> Flask:
     # Registrando los blueprints en la app
     from . import admin
     from . import readings
+    from . import errors
 
     app.register_blueprint(admin.bp, url_prefix="/admin")    
     app.register_blueprint(readings.bp, url_prefix="/readings")
+    app.register_blueprint(errors.bp)
 
     return app
