@@ -30,6 +30,10 @@ class ForbiddenError(APIError):
     status_code = 403
     message = "No tienes permisos para realizar esta acción"
 
+class NotFoundError(APIError):
+    status_code = 404
+    message = "El recurso solicitado no fue encontrado"
+
 bp = Blueprint('errors', __name__)
 
 @bp.app_errorhandler(APIError)
