@@ -2,7 +2,7 @@ from typing import Optional, Any
 from psycopg import Connection
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
-from flask import g, current_app
+from flask import Flask, g, current_app
 import functools
 import click
 
@@ -11,7 +11,7 @@ from .types import *
 def transactional(multiple: bool = False):
     def decorator(func):
         @functools.wraps(func)
-        def wrapper(self: Access, *args, **kwargs) -> Any:
+        def wrapper(self: DatabaseSession, *args, **kwargs) -> Any:
             # Extraemos el SQL del docstring de la función
             sql = func.__doc__
             if not sql:
@@ -34,14 +34,14 @@ def transactional(multiple: bool = False):
                 raise e
             
         return wrapper
-    
+
     return decorator
 
-class Client:
+class DatabasePool:
     def __init__(self):
         self.pool: Optional[ConnectionPool] = None
 
-    def init_app(self, app):
+    def init_app(self, app: Flask):
         """Inicializa el pool usando la configuración de la app"""
         conn_str = app.config['DATABASE']
         self.pool = ConnectionPool(conn_str)
@@ -52,21 +52,21 @@ class Client:
 
     def teardown(self, e=None):
         """Elimina la instancia `Access` y devuelve la conexión vinculada al pool"""
-        db_access = g.pop('db_access', None)
+        db_session = g.pop('db_session', None)
         
-        if db_access is not None:
-            self.pool.putconn(db_access._conn)
+        if db_session is not None:
+            self.pool.putconn(db_session._conn)
 
     @property
-    def access(self) -> Access:
+    def session(self) -> DatabaseSession:
         """Retorna una instancia `Access` que esta vinculada a la conexión que se obtenga del pool"""
-        if 'db_access' not in g:
+        if 'db_session' not in g:
             conn = self.pool.getconn()
-            g.db_access = Access(conn)
+            g.db_session = DatabaseSession(conn)
         
-        return g.db_access
+        return g.db_session
 
-class Access:
+class DatabaseSession:
     def __init__(self, conn: Connection):
         self._conn = conn
 
@@ -105,6 +105,24 @@ class Access:
         LIMIT 1;
         """
         pass
+    
+    @transactional()
+    def update_device_name(self, *, id: DeviceId, name: str) -> Optional[Device]:
+        """
+        UPDATE devices
+        SET name = %(name)s 
+        WHERE id = %(id)s
+        RETURNING *;
+        """
+        pass
+    
+    @transactional()
+    def delete_device(self, *, id: DeviceId) -> None:
+        """
+        DELETE FROM devices
+        WHERE id = %(id)s;
+        """
+        pass
         
     @transactional()
     def record_reading(self, payload: ReadingCreate) -> None:
@@ -114,11 +132,11 @@ class Access:
         """
         pass
 
-db_client = Client()
-init_app = db_client.init_app
+pool = DatabasePool()
+init_app = pool.init_app
 
 @click.command("create-tables")
 def create_tables_command():
     """Crea las tablas usando el archivo schema.sql"""
-    db_client.access.create_tables()
+    pool.session.create_tables()
     click.echo("✅ Base de datos inicializada correctamente.")
