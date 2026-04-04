@@ -1,3 +1,6 @@
+# Arduino
+arduino_secrets.h
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
