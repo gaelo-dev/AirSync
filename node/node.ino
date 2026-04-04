@@ -15,8 +15,8 @@
 * MODIFICACIONES Y ADAPTACIÓN:
 * ----------------------------
 * Desarrollado por: @gaelo-dev
-* - Integración de la lógica de muestreo del sensor Sharp con el stack de red del ESP32.
-* - Implementación de cliente asíncrono para envío de datos a PostgreSQL.
+* - Integración de la lógica de muestreo del sensor Sharp Optical Dust.
+* - Implementación de la logica de conexion WiFi y envio de los datos con el stack de red del ESP32.
 * - Ajuste de temporización (timing) para evitar interferencias entre el muestreo analógico y las tareas de red.
 */
 
@@ -168,7 +168,7 @@ void setup() {
     float gc = get_gas_concentration();
     float temp = get_temperature();
     float humidity = get_humidity();
-    
+
     Serial.printf("Dust Density: %.2f mg/m3\n", dust);
 
     // Conexión WiFi y el envío de datos a la API
