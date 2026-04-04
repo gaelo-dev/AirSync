@@ -20,7 +20,7 @@
 * - Ajuste de temporización (timing) para evitar interferencias entre el muestreo analógico y las tareas de red.
 */
 
-#include "esp_wpa2.h"
+#include "esp_eap_client.h"
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
@@ -83,12 +83,15 @@ uint32_t get_slot() {
 void conn_wifi() {
     Serial.printf("Connecting to SSID: %s\n", SSID);
     
+    WiFi.disconnect(true); 
+    WiFi.mode(WIFI_STA);
+    
     // WPA2 enterprise magic starts here
-    WiFi.disconnect(true);      
-    esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)EAP_ID, strlen(EAP_ID));
-    esp_wifi_sta_wpa2_ent_set_username((uint8_t *)EAP_USERNAME, strlen(EAP_USERNAME));
-    esp_wifi_sta_wpa2_ent_set_password((uint8_t *)EAP_PASSWORD, strlen(EAP_PASSWORD));
-    esp_wifi_sta_wpa2_ent_enable();
+    esp_eap_client_set_identity((uint8_t *)EAP_ID, strlen(EAP_ID));
+    esp_eap_client_set_username((uint8_t *)EAP_USERNAME, strlen(EAP_USERNAME));
+    esp_eap_client_set_password((uint8_t *)EAP_PASSWORD, strlen(EAP_PASSWORD));
+    
+    esp_wifi_sta_enterprise_enable();
     // WPA2 enterprise magic ends here
 
     WiFi.begin(SSID);
